@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+</head>
+<body>
+    <div class="container">
+        <h1>Expense Tracker App</h1>
+        <form id="expense-form">
+            <label for="expense-name">Expense Name:</label>
+            <input type="text" id="expense-name" placeholder="Expense Name" required>
+            <label for="expense-amount">Expense Amount:</label>
+            <input type="number" id="expense-amount" placeholder="Amount" required>
+            <label for="category">Expense Category:</label>
+            <select id="expense-category" required>
+                <option value="" disabled selected>Select Category</option>
+                <option value="food">Food</option>
+                <option value="electricity">Electricity</option>
+                <option value="groceries">Groceries</option>
+                <option value="rent">Rent</option>
+                <option value="movies">Movies</option>
+            </select>
+            <button type="submit">Add Expense</button>
+        </form>
+
+        <ul id="expense-list"></ul>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.1/axios.min.js"></script>
+    <script>
+        
+        function loadExpenses() {
+            return JSON.parse(localStorage.getItem('expenses')) || [];
+        }
+
+        function saveExpenses(expenses) {
+           
+            axios.post("https://crudcrud.com/api/93617a4389bc461faed4981d2670d886/appointmentdata", expenses)
+            .then((response) => {
+                //console.log(response);
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+            })
+            .catch((err)  => {
+                console.log(err);
+            });
+        }
+
+        function updateExpenseList(expenses) {
+            const expenseList = document.getElementById('expense-list');
+            expenseList.innerHTML = '';
+
+            expenses.forEach((expense, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<strong>${expense.name}</strong> - ${expense.amount} - Category: ${expense.category}
+                    <button class="edit" onclick="editExpense(${index})">Edit</button>
+                    <button class="delete" onclick="deleteExpense(${index})">Delete</button>`;
+                expenseList.appendChild(listItem);
+            });
+        }
+
+        function addExpense(name, amount, category) {
+            const expenses = loadExpenses();
+            expenses.push({ name, amount, category });
+            saveExpenses(expenses);
+            updateExpenseList(expenses);
+            document.getElementById('expense-form').reset();
+        }
+
+        function editExpense(index) {
+            const expenses = loadExpenses();
+            const expense = expenses[index];
+
+            document.getElementById('expense-name').value = expense.name;
+            document.getElementById('expense-amount').value = expense.amount;
+            document.getElementById('expense-category').value = expense.category;
+
+            // Remove the edited expense from the list
+            expenses.splice(index, 1);
+            saveExpenses(expenses);
+            updateExpenseList(expenses);
+        }
+
+        function deleteExpense(index) {
+            const expenses = loadExpenses();
+            expenses.splice(index, 1);
+            saveExpenses(expenses);
+            updateExpenseList(expenses);
+        }
+
+        document.getElementById('expense-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById('expense-name').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            const category = document.getElementById('expense-category').value;
+
+            if (name.trim() === "" || isNaN(amount) || category === "") {
+                alert("Please fill out all fields correctly.");
+                return;
+            }
+
+            addExpense(name, amount, category);
+        });
+
+        // Initialize the app
+        const initialExpenses = loadExpenses();
+        updateExpenseList(initialExpenses);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+</body>
+</html>
